@@ -12,6 +12,7 @@
   "sideEffects": false,
   "scripts": {
     "storybook": "start-storybook",
+    "storybook:debug": "start-storybook --debug-webpack",
     "lint": "eslint src/ --cache",
     "lint:style": "stylelint 'src/**/*.{scss,css}'",
     "start": "rollup -c -w",
