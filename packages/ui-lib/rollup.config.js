@@ -25,7 +25,9 @@ export default {
   plugins: [
     babel({ babelHelpers: 'bundled' }),
     postcss({
-      modules: true,
+      modules: {
+        localsConvention: 'camelCase',
+      },
       extract: true,
       minimize: !process.env.ROLLUP_WATCH,
       plugins: [autoprefixer()],
