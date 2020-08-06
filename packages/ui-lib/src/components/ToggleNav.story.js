@@ -7,10 +7,12 @@ storiesOf('ToggleNav', module)
   .addDecorator(withKnobs)
   .add('default', () => (
     <ToggleNav>
-      <ToggleButton>Some txt</ToggleButton>
+      <ToggleButton>Click Me</ToggleButton>
       <ToggleList>
         <ToggleItem>
-          <ToggleLink href="google.com">Google</ToggleLink>
+          <ToggleLink href="google.com" className="foo" data-bar="baz">
+            Google
+          </ToggleLink>
         </ToggleItem>
         <ToggleItem>
           <ToggleLink href="google.com">Google</ToggleLink>
