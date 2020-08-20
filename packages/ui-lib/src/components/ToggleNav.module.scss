@@ -1,3 +1,53 @@
-.toggle {
-  color: orange;
+.toggleNav {
+  display: inline-flex;
+  flex-direction: column;
+}
+
+.toggleButton {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #fff;
+  border: 1px solid #c8cbcc;
+  border-radius: 0.1875rem;
+  font-family: inherit;
+  font-size: 1rem;
+  line-height: 1.5;
+  padding: 0.4375rem 1rem;
+  min-width: 14.375rem;
+  text-align: left;
+
+  &:hover,
+  &:focus {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.025) 0, rgba(0, 17, 26, 0.05) 100%), #fff;
+  }
+}
+
+// TODO: fix the styles for the toggleButton when its in an open state
+// the bottom border should not be rounded and should be lighter
+
+.toggleArrow {
+  height: 1.25em;
+  transform: rotate(90deg);
+}
+
+.toggleList {
+  background-color: #fff;
+  border: 1px solid #c8cbcc;
+  border-top-width: 0;
+  margin: 0;
+  padding: 0;
+  list-style-type: none;
+  border-radius: 0 0 0.1875rem 0.1875rem;
+}
+
+.toggleLink {
+  color: #1061e3;
+  line-height: 1.5;
+  text-decoration: none;
+  display: block;
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+  margin-left: 1rem;
+  margin-right: 1rem;
 }
