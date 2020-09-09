@@ -2,17 +2,35 @@ import React, { createContext, useState, useContext, useMemo, useEffect } from '
 import classNames from 'classnames';
 import styles from './ToggleNav.module.scss';
 
+function callFnsInOrder(...fns) {
+  return (event) => {
+    fns.forEach((fn) => {
+      if (!fn) {
+        return;
+      }
+      fn(event);
+    });
+  };
+}
+
 const ToggleContext = createContext();
 
 export function ToggleProvider(props) {
-  const { children } = props;
+  const { children, open: userOpen, onChange } = props;
   const [open, setOpen] = useState(false);
 
-  const value = useMemo(() => ({ open, setOpen }), [open]);
+  const isControlled = typeof open === 'boolean' && onChange;
+
+  const value = useMemo(() => (isControlled ? { open: userOpen, setOpen: onChange } : { open, setOpen }), [
+    open,
+    isControlled,
+    userOpen,
+    onChange,
+  ]);
 
   useEffect(() => {
     const handleOutsideClick = () => {
-      setOpen(false);
+      isControlled ? onChange(false) : setOpen(false);
     };
 
     window.addEventListener('click', handleOutsideClick);
@@ -20,37 +38,36 @@ export function ToggleProvider(props) {
     return () => {
       window.removeEventListener('click', handleOutsideClick);
     };
-  }, []);
+  }, [isControlled, onChange]);
 
   return <ToggleContext.Provider value={value}>{children}</ToggleContext.Provider>;
 }
 
 export function ToggleNav(props) {
-  const { children } = props;
+  const { children, open, onChange } = props;
 
   return (
-    <ToggleProvider>
+    <ToggleProvider open={open} onChange={onChange}>
       <nav className={styles.toggleNav}>{children}</nav>
     </ToggleProvider>
   );
 }
 
 export function ToggleButton(props) {
-  const { children } = props;
+  const { children, className, component: Component = 'button', onClick, ...rest } = props;
 
   const { open, setOpen } = useContext(ToggleContext);
+  const classes = classNames(styles.toggleButton, className);
+
+  const composedOnClicks = callFnsInOrder((event) => {
+    event.stopPropagation();
+    setOpen(!open);
+  }, onClick);
 
   return (
-    <button
-      className={styles.toggleButton}
-      aria-expanded={open}
-      onClick={(event) => {
-        event.stopPropagation();
-        setOpen(!open);
-      }}
-    >
+    <Component className={classes} aria-expanded={open} onClick={composedOnClicks} {...rest}>
       {children}
-    </button>
+    </Component>
   );
 }
 
@@ -60,23 +77,23 @@ export function ToggleList(props) {
   const { open } = useContext(ToggleContext);
 
   return (
-    <ul className={styles.toggleList} hidden={!open}>
-      {children}
-    </ul>
+    <div className={styles.toggleListWrapper}>
+      <ul className={styles.toggleList} hidden={!open}>
+        {children}
+      </ul>
+    </div>
   );
 }
 
 export function ToggleItem(props) {
-  const { children } = props;
-
-  return <li>{children}</li>;
+  return <li {...props} />;
 }
 
 export function ToggleLink(props) {
-  const { className, ...rest } = props;
+  const { className, component: Component = 'a', ...rest } = props;
 
   const classes = classNames(styles.toggleLink, className);
-  return <a className={classes} {...rest} />;
+  return <Component className={classes} {...rest} />;
 }
 
 export function ToggleArrow() {
