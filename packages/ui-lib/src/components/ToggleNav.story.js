@@ -4,6 +4,8 @@ import { withKnobs } from '@storybook/addon-knobs';
 import { ToggleNav, ToggleButton, ToggleList, ToggleItem, ToggleLink, ToggleArrow } from './ToggleNav';
 
 function CustomUI() {
+  const { ...tbd } = useToggleNav();
+
   return (
     <nav>
       <button>Click me</button>
