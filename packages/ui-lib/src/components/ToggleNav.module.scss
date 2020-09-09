@@ -23,6 +23,12 @@
   }
 }
 
+.toggleButton[aria-expanded='true'] {
+  border-bottom-color: #f8f8f8;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
 // TODO: fix the styles for the toggleButton when its in an open state
 // the bottom border should not be rounded and should be lighter
 
@@ -31,7 +37,15 @@
   transform: rotate(90deg);
 }
 
+.toggleListWrapper {
+  position: relative;
+}
+
 .toggleList {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
   background-color: #fff;
   border: 1px solid #c8cbcc;
   border-top-width: 0;
