@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, useMemo, useEffect } from 'react';
+import React, { createContext, useState, useContext, useMemo, useEffect, useRef } from 'react';
 import classNames from 'classnames';
 import styles from './ToggleNav.module.scss';
 
@@ -13,61 +13,125 @@ function callFnsInOrder(...fns) {
   };
 }
 
-const ToggleContext = createContext();
+function createButtonPropGetter({ open, setOpen, buttonRef }) {
+  return (customProps = {}) => {
+    const { onClick, ...rest } = customProps;
+    return {
+      ref: buttonRef,
+      'aria-expanded': open,
+      onClick: callFnsInOrder((event) => {
+        event.stopPropagation();
+        setOpen(!open);
+      }, onClick),
+      ...rest,
+    };
+  };
+}
 
-export function ToggleProvider(props) {
-  const { children, open: userOpen, onChange } = props;
-  const [open, setOpen] = useState(false);
+function createItemPropGetter({ buttonRef, setOpen }) {
+  return (customProps = {}) => {
+    const { onClick, ...rest } = customProps;
+    return {
+      onClick: callFnsInOrder(() => {
+        setOpen(false);
+        buttonRef.current.focus();
+      }, onClick),
+      ...rest,
+    };
+  };
+}
 
-  const isControlled = typeof open === 'boolean' && onChange;
-
-  const value = useMemo(() => (isControlled ? { open: userOpen, setOpen: onChange } : { open, setOpen }), [
-    open,
-    isControlled,
-    userOpen,
-    onChange,
-  ]);
+function useAutoCloseToggle(config) {
+  const { setOpen, autoClose = true } = config;
 
   useEffect(() => {
     const handleOutsideClick = () => {
-      isControlled ? onChange(false) : setOpen(false);
+      setOpen(false);
     };
 
-    window.addEventListener('click', handleOutsideClick);
+    if (autoClose) {
+      window.addEventListener('click', handleOutsideClick);
+    }
 
     return () => {
-      window.removeEventListener('click', handleOutsideClick);
+      if (autoClose) {
+        window.removeEventListener('click', handleOutsideClick);
+      }
     };
-  }, [isControlled, onChange]);
+  }, [autoClose, setOpen]);
+}
+
+export function useToggleNav(config = {}) {
+  const { autoClose } = config;
+  let [open, setOpen] = useState(false);
+  const buttonRef = useRef();
+
+  useAutoCloseToggle({ autoClose, setOpen });
+
+  const isControlled = typeof config.open === 'boolean' && typeof config.setOpen === 'function';
+
+  open = isControlled ? config.open : open;
+  setOpen = isControlled ? config.setOpen : setOpen;
+
+  return {
+    open,
+    buttonProps: createButtonPropGetter({ open, setOpen, buttonRef }),
+    itemProps: createItemPropGetter({ setOpen, buttonRef }),
+  };
+}
+
+const ToggleContext = createContext({
+  open: false,
+  setOpen: () => {},
+  buttonRef: React.createRef(),
+});
+
+export function ToggleProvider(props) {
+  const { children, open: userOpen, onChange, autoClose } = props;
+  const [open, setOpen] = useState(false);
+  const buttonRef = useRef();
+
+  const isControlled = typeof open === 'boolean' && onChange;
+
+  const value = useMemo(
+    () => ({
+      open: isControlled ? userOpen : open,
+      setOpen: isControlled ? onChange : setOpen,
+      buttonRef,
+    }),
+    [open, isControlled, userOpen, onChange]
+  );
+
+  useAutoCloseToggle({ autoClose, setOpen: value.setOpen });
 
   return <ToggleContext.Provider value={value}>{children}</ToggleContext.Provider>;
 }
 
 export function ToggleNav(props) {
-  const { children, open, onChange } = props;
+  const { children, open, onChange, autoClose } = props;
 
   return (
-    <ToggleProvider open={open} onChange={onChange}>
+    <ToggleProvider open={open} onChange={onChange} autoClose={autoClose}>
       <nav className={styles.toggleNav}>{children}</nav>
     </ToggleProvider>
   );
 }
 
 export function ToggleButton(props) {
-  const { children, className, component: Component = 'button', onClick, ...rest } = props;
+  const { className, component: Component = 'button', ...rest } = props;
 
-  const { open, setOpen } = useContext(ToggleContext);
+  const { open, setOpen, buttonRef } = useContext(ToggleContext);
   const classes = classNames(styles.toggleButton, className);
 
-  const composedOnClicks = callFnsInOrder((event) => {
-    event.stopPropagation();
-    setOpen(!open);
-  }, onClick);
+  const buttonProps = createButtonPropGetter({ open, setOpen, buttonRef });
 
   return (
-    <Component className={classes} aria-expanded={open} onClick={composedOnClicks} {...rest}>
-      {children}
-    </Component>
+    <Component
+      {...buttonProps({
+        className: classes,
+        ...rest,
+      })}
+    />
   );
 }
 
@@ -91,9 +155,19 @@ export function ToggleItem(props) {
 
 export function ToggleLink(props) {
   const { className, component: Component = 'a', ...rest } = props;
+  const { buttonRef, setOpen } = useContext(ToggleContext);
+  const itemProps = createItemPropGetter({ buttonRef, setOpen });
 
   const classes = classNames(styles.toggleLink, className);
-  return <Component className={classes} {...rest} />;
+
+  return (
+    <Component
+      {...itemProps({
+        className: classes,
+        ...rest,
+      })}
+    />
+  );
 }
 
 export function ToggleArrow() {

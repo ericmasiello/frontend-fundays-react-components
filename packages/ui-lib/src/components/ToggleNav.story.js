@@ -1,19 +1,49 @@
 import React, { useState } from 'react';
 import { storiesOf } from '@storybook/react';
 import { withKnobs } from '@storybook/addon-knobs';
-import { ToggleNav, ToggleButton, ToggleList, ToggleItem, ToggleLink, ToggleArrow } from './ToggleNav';
+import { ToggleNav, ToggleButton, ToggleList, ToggleItem, ToggleLink, ToggleArrow, useToggleNav } from './ToggleNav';
 
-function CustomUI() {
-  const { ...tbd } = useToggleNav();
-
+function PropGetter() {
+  const { open, buttonProps, itemProps } = useToggleNav();
   return (
     <nav>
-      <button>Click me</button>
-      <ul>
-        <li>
-          <a href="google.com">Google</a>
-        </li>
-      </ul>
+      <style>
+        {`
+          .foo {
+            border: 3px solid green;
+            background: white;
+          }
+        `}
+      </style>
+      <button
+        {...buttonProps({
+          onClick() {
+            console.log('clicked the button');
+          },
+          className: 'foo',
+        })}
+      >
+        Click me
+      </button>
+      {open && (
+        <ul>
+          <li>
+            <button
+              {...itemProps({
+                className: 'foo',
+                onClick() {
+                  console.log('clicked the item');
+                },
+              })}
+            >
+              First
+            </button>
+          </li>
+          <li>
+            <button {...itemProps()}>Second</button>
+          </li>
+        </ul>
+      )}
     </nav>
   );
 }
@@ -50,7 +80,7 @@ storiesOf('ToggleNav', module)
   .add('default', () => (
     <>
       <ToggleNav>
-        <ToggleButton onClick={() => alert('hi')}>
+        <ToggleButton onClick={() => console.log('hi')}>
           Click Me <ToggleArrow />
         </ToggleButton>
         <ToggleList>
@@ -60,7 +90,14 @@ storiesOf('ToggleNav', module)
             </ToggleLink>
           </ToggleItem>
           <ToggleItem>
-            <ToggleLink component="button">The modal</ToggleLink>
+            <ToggleLink
+              onClick={() => {
+                console.log('clicking the modal');
+              }}
+              component="button"
+            >
+              The modal
+            </ToggleLink>
           </ToggleItem>
           <ToggleItem>
             <ToggleLink href="google.com">Google</ToggleLink>
@@ -86,6 +123,29 @@ storiesOf('ToggleNav', module)
       <p>lorem ipsum dolar alkvalsf jasld lasjfls</p>
     </>
   ))
+  .add('disable autoClose', () => (
+    <ToggleNav autoClose={false}>
+      <ToggleButton>
+        Click Me <ToggleArrow />
+      </ToggleButton>
+      <ToggleList>
+        <ToggleItem>
+          <ToggleLink href="google.com" className="foo" data-bar="baz">
+            Google
+          </ToggleLink>
+        </ToggleItem>
+        <ToggleItem>
+          <ToggleLink component="button">The modal</ToggleLink>
+        </ToggleItem>
+        <ToggleItem>
+          <ToggleLink href="google.com">Google</ToggleLink>
+        </ToggleItem>
+      </ToggleList>
+    </ToggleNav>
+  ))
   .add('example control', () => {
     return <Controller />;
+  })
+  .add('prop getter', () => {
+    return <PropGetter />;
   });
